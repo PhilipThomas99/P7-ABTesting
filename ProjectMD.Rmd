@@ -9,7 +9,7 @@ In this section, we discuss the invariant metrics and evaluation metrics that we
 
 **Invariant Metrics**
 
-- **Number of Cookies:** This is approximately number of pageviews. Cookies is unit of diversion. As the user visits the website, they haven't seen the experiments until they click the button. Therefore this is invariant and independent from the experiment
+- **Number of Cookies:** This is approximately number of pageviews. Cookies is our unit of diversion because we want our diversion to be independent from the experiment. As the user visits the website, they haven't seen the experiments until they click the button. Therefore this is invariant and independent from the experiment
 - **Number of Clicks:** This is the click on the "start free trial", and therefore, it's happening before they see the experiments. For this reason, this metric is also invariant
 - **Click Through Probability:** This is the extension of the number of clicks. it is the ratio of the number of visitors who click the button to the total number of visitors. This is also happening before the experiment happens, so it's invariant.  
 
@@ -256,7 +256,7 @@ For example, if student finish the "prerequisite module" before the trial's ende
 
 The reward doesn't have to be money. Getting personal motivation by Prof. Sebastian Thrun (read: personal email, not generic email) is also motivating. 
 
-The metrics and variable of this experiment would be the same as before. The unit of diversion would also be cookies., where the invariant metrics are number of cookies, click through probability, and the evaluation metrics would be net retention rate. 
+The metrics and variable of this experiment would be the same as before. The unit of diversion would also be cookies since it's independent from the enrollment. The invariant metrics are number of cookies, click through probability, and the evaluation metrics would be net retention rate.  
 
 The hypothesis is that the gamification will motivate many people, and therefore increase the net retention rate. 
 
