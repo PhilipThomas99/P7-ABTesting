@@ -260,4 +260,8 @@ The metrics and variable of this experiment would be the same as before. The uni
 
 The hypothesis is that the gamification will motivate many people, and therefore increase the net retention rate. 
 
+#References: 
+- Udacity AB Testing Lecture
+- Wikipedia page for [AB Testing](https://en.wikipedia.org/wiki/A/B_testing)
+- Smashing Magazine's Article about [AB Testing](https://www.smashingmagazine.com/2010/06/the-ultimate-guide-to-a-b-testing/)
 
