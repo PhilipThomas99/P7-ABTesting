@@ -1,0 +1,263 @@
+Topic: Designing AB Test
+============================================================
+###By: Philip Thomas
+
+#Experiment Design
+
+##Metric Choice
+In this section, we discuss the invariant metrics and evaluation metrics that we used in our analysis. The invariant metrics should be the metrics that is not change across experimental and control groups. We chose all the metrics that is not affected by clicking the "start free trial" button"  
+
+**Invariant Metrics**
+
+- **Number of Cookies:** This is approximately number of pageviews. Cookies is unit of diversion. As the user visits the website, they haven't seen the experiments until they click the button. Therefore this is invariant and independent from the experiment
+- **Number of Clicks:** This is the click on the "start free trial", and therefore, it's happening before they see the experiments. For this reason, this metric is also invariant
+- **Click Through Probability:** This is the extension of the number of clicks. it is the ratio of the number of visitors who click the button to the total number of visitors. This is also happening before the experiment happens, so it's invariant.  
+
+**Evaluation Metrics**
+Evaluation metrics are the metrics that we used to analyze our experiment. Consequently, they need to be affected by the experiments. Here, in this study, we used two of the most important evaluation metrics from the options that we are given: 
+
+- **Gross Conversion:** This could also be called the enrollment rate. This metric measure the ratio between number of visitors who enroll in the free trial program to the number of visitors who clicked the free trial button. Clearly, we want to reduce the enrollment rate to screen non-serious users, so this would be an excellent evaluation metric.  
+- **Net Conversion:** This could be called a payment rate. When the free trial mode has finished, how much of the people are transitioning to full time, and thus, pay for it. **This metric describe Our important goal. if the experiment proves to be useful, we want to see that the new trial process improve the net conversion rate.** 
+
+Although retention rate could be an interesting evaluation metric, The effect of retention rate is somehow proxied by these two metrics, so we don't include retention rate in our evaluation metrics.
+
+##Measuring Standard Deviation
+We estimate the standard deviation, by assuming that our test data have binomial distribution. The complete dataset that we use can be find [here](https://docs.google.com/spreadsheets/d/1MYNUtC47Pg8hdoCjOXaHqF-thheGpUshrFA21BAJnNc/edit#gid=0)
+
+###Gross Conversion
+```{r, echo=TRUE, "GrossConSTDEV"}
+#sample size is 5000 cookies
+sample_size = 5000
+p_click_through = 0.08
+p_enroll_giv_click = 0.20625
+
+#calculate N
+population_size = sample_size * p_click_through
+
+#calculate stdev using binomial
+std_dev = sqrt((p_enroll_giv_click *(1-p_enroll_giv_click) )/population_size)
+paste("standard deviation = ", std_dev)
+```
+###Net Conversion
+
+```{r, echo=TRUE, "NETConSTDEV"}
+#sample size is 5000 cookies
+sample_size = 5000
+p_click_through = 0.08
+p_enroll_giv_click = 0.1093125
+
+#calculate N
+population_size = sample_size * p_click_through
+
+#calculate stdev using binomial
+std_dev = sqrt((p_enroll_giv_click *(1-p_enroll_giv_click) )/population_size)
+paste("standard deviation = ", std_dev)
+```
+
+
+
+##Sizing
+###Number of Samples vs Power
+The number of samples is calculated using the sample size calculator [here](http://www.evanmiller.org/ab-testing/sample-size.html). The type 1 error, $\alpha = 0.05$ and the type 2 error, $\beta = 0.2$ is specified in the problem. The $d_{min}$ and Baseline conversion rate are given. using these numbers, here are the results from the calculator.
+
+| Evaluation Metric | Baseline conversion rate | dmin | Sample size |
+|:-------------------:|:--------------------:|:--------------------:|:--------------------:| 
+| Gross Conversion  | .20625 | 0.01 | 25835 |
+| Net Conversion    | .1093125 | 0.0075 | 27413 |
+
+after getting the results from the calculator, we then calculate the number of samples needed. the number of samples are equal to the number of people who click the free trial button. This number is only for one group. As we have two groups (experiment and control), and as there are only 8% chance that people are clicking the free trial button per day, the total page visit that we need is as the following. 
+
+$Conversion_{Gross} = \dfrac{25835}{0.08} * 2 = 645875$
+
+$Conversion_{Net} = \dfrac{27413}{0.08} * 2 = 685325$
+
+We take the maximum of the two as the required visits, and therefore the total number of visits that we need is: 
+
+$PageViews_{needed} = 685325$
+
+###Duration vs Exposure
+The duration and exposure are somehow linked to one and another. If the experiments are considered high risk, we should limit our exposure, and consequently, managing our duration accordingly. 
+
+Considering the nature of our experiment, no we are not running a high risk experiment. No sensitive data are collected, no big difference in the participant's website experience, and the experiment itself has no big associated costs. For these reasons, we choose to keep the exposure to 1.  
+
+$exposure = 1$
+
+Meaning that we will divert all our pageviews to this experiment. The duration is then can be calculated as the following. 
+
+$\dfrac{pageviews}{day} = 40000$
+
+$days = \dfrac{PageViews_{needed}}{\dfrac{pageviews}{day}} = \dfrac{685325}{40000} = 17.1 \sim 18 days$
+
+18 days is perfectly reasonable number to perform the AB test.
+
+#Experiment Analysis
+The data that we use in this study can be found [here.](https://docs.google.com/spreadsheets/d/1Mu5u9GrybDdska-ljPXyBjTpdZIUev_6i7t4LRDfXM8/edit#gid=0)
+
+##Sanity Checks
+We are doing the sanity checks using the observation rate. In this comparison, we are Using the expected diversion of 0.5 and normal approximation to do our sanity analysis. Using this method, we are going to see if the observation rate are stays within the confidence interval.   
+
+###Number of Cookies
+
+```{r, echo=TRUE, "NumberofCookies"}
+sum_pageviews_control = 345543
+sum_pageviews_experiment = 344660
+stdeviation = sqrt(0.5 * 0.5 /(sum_pageviews_control + sum_pageviews_experiment))
+CI_low = -1.96 *stdeviation + 0.5
+CI_high = 1.96 *stdeviation + 0.5
+observed =   sum_pageviews_control / (sum_pageviews_control + sum_pageviews_experiment)
+passing_condition = CI_high > observed & CI_low < observed 
+
+paste("within range =", passing_condition)
+paste("CI_low <= observed <= CI_high","=", CI_low, "<=", observed, "<=", CI_high)
+```
+
+###Number of Clicks on "Start free trial"
+
+```{r, echo=TRUE, "NumberClicks"}
+sum_uid_control = 28378
+sum_uid_experiment = 28325
+stdeviation = sqrt(0.5 * 0.5 /(sum_uid_control + sum_uid_experiment))
+CI_low = -1.96 *stdeviation + 0.5
+CI_high = 1.96 *stdeviation + 0.5
+observed =   sum_uid_control / (sum_uid_control + sum_uid_experiment)
+
+passing_condition = CI_high > observed & CI_low < observed 
+
+paste("within range =", passing_condition)
+paste("CI_low <= observed <= CI_high","=", CI_low, "<=", observed, "<=", CI_high)
+```
+
+###Click Through Probability on "Start free trial"
+```{r, echo=TRUE, "CTP"}
+ctp_control = sum_uid_control/sum_pageviews_control
+stdeviation = sqrt(ctp_control * (1-ctp_control) /(sum_pageviews_control))
+CI_low = -1.96 *stdeviation + ctp_control
+CI_high = 1.96 *stdeviation + ctp_control
+observed =   sum_uid_control / (sum_uid_control + sum_uid_experiment)
+ctr_experiment = sum_uid_experiment/sum_pageviews_experiment
+
+passing_condition = CI_high > ctr_experiment & CI_low < ctr_experiment 
+
+paste("within range =", passing_condition)
+paste("CI_low <= ctr_experiment <= CI_high","=", CI_low, "<=", ctr_experiment, "<=", CI_high)
+```
+
+All these results shown that none of our results are insane. Everything stays within the 95% confidence interval, and thus, we can go on with the analysis. 
+
+#Result Analysis
+After performing the sanity check, we now can analyze whether our changes to the free trial button are important or not for the business.
+
+###Effect Size Test
+First, we are going to do effect size test. The effect size test is intended to quantify how significant it is the difference between the experiment and control groups. We calculate the difference both in gross conversion and the net conversion, by constructing the confidence interval for the analysis. 
+
+in this study, we use confidence level of 95%, meaning $\alpha = 0.05 \rightarrow Z=1.96$. If the confidence interval doesn't include 0, then it's considered **statistically significant** (difference equal to 0 means there is no effect).
+
+###Gross Conversion
+the $\d_{min} = -0.01$ is determined. We need the confidence interval lays outside this value in order to be considered as **practically significant.**
+
+```{r, echo=TRUE, "GrossCon"}
+sum_of_control_enrollments = 3785
+sum_of_experiment_enrollments = 3423
+sum_of_control_clicks = 17293
+sum_of_experiment_clicks = 17260
+
+prob_enrollment = (sum_of_control_enrollments+sum_of_experiment_enrollments) / (sum_of_control_clicks +sum_of_experiment_clicks)
+d = sum_of_experiment_enrollments/sum_of_experiment_clicks - sum_of_control_enrollments/sum_of_control_clicks
+stderror = sqrt(prob_enrollment * (1-prob_enrollment)  * (1/sum_of_control_clicks + 1/sum_of_experiment_clicks))
+Lbound = d - 1.96 * stderror
+Ubound = d + 1.96 * stderror
+
+paste("Lower Bound = ", Lbound)
+paste("Upper Bound = ", Ubound)
+```
+
+Since the lower bound and upper bound doesn't include both 0 and $\d_{min} = -0.01$, we then can conclude that in terms of effect in gross conversion, the new trial process can be considered as both **statistically significant** and **practically significant.**
+
+###Net Conversion
+```{r, echo=TRUE, "NetCon"}
+sum_of_control_payments = 2033
+sum_of_experiment_payments = 1945
+
+prob_payments = (sum_of_control_payments+sum_of_experiment_payments) / (sum_of_control_clicks +sum_of_experiment_clicks)
+d = sum_of_experiment_payments/sum_of_experiment_clicks - sum_of_control_payments/sum_of_control_clicks
+stderror = sqrt(prob_payments * (1-prob_payments)  * (1/sum_of_control_clicks + 1/sum_of_experiment_clicks))
+Lbound = d - 1.96 * stderror
+Ubound = d + 1.96 * stderror
+
+paste("Lower Bound = ", Lbound)
+paste("Upper Bound = ", Ubound)
+
+```
+
+Since the lower bound and upper bound  include 0, then it's ** not statistically significant**. Additionally since the lower bound and upper bound also include $d_{min} = -0.0075$, it's **not practically significant**.
+
+
+###Sign Test
+We then do the sign test to confirm our effect size test results. Here, we assume that the baseline probability of people converting is 50%. We then run the following code to see the whether the evaluation metrics are significant or not.
+
+###Gross Conversion
+```{r, echo=TRUE, "GrossConSign"}
+success_num = 4
+trials_num = 23
+prob = 0.5
+two_tailed_p_value = pbinom(success_num, size=trials_num, prob=0.5)*2 
+
+paste("two tailed p value = ", two_tailed_p_value)
+
+```
+For the two tailed analysis, the significance level that we expect is 0.025. Since our gross conversion p value is 0.0026, we can conclude that the experiment result for gross conversion is statistically significant. 
+
+
+###Net Conversion
+```{r, echo=TRUE, "NetConSign"}
+success_num = 10
+trials_num = 23
+prob = 0.5
+two_tailed_p_value = pbinom(success_num, size=trials_num, prob=0.5)*2 
+
+paste("two tailed p value = ", two_tailed_p_value)
+
+```
+
+Here for net conversion, we see that the two tailed p value is 0.676, which is much higher compared to the significance level of 0.025. Therefore, the same with the size-effect test, sign test also conclude that the results from net conversion is not significant. 
+
+#Summary
+We have performed an AB Test experiment to see the impact of the new trial process. The new trial process is intended to reduce the number of enrollment rate, to screen out the user who can't committed to finish the program, and therefore, increase the participants who finish the full program. **In short, we want to decrease the gross conversion, but increase the net conversion.**  
+
+We are using two analysis methods to see the impact of the new trial process. The summary of the results are as the following.   
+
+- **Size Effect Test:** 
+
+| Evaluation Metric | Statistically Significant | Practically Significant| dmin | LBound | UBound |
+|:-------------------:|:--------------------:|:--------------------:|:--------------------:|:--------------------:| :--------------------:| 
+| Gross Conversion  | Yes | Yes | -0.01 | -0.0291 | -0.012 |
+| Net Conversion    | No | No | -0.0075 | -0.0116 | 0.0018 |
+
+- **Sign Test:** 
+
+| Evaluation Metric | Statistically Significant|
+|:-------------------:|:--------------------:| 
+| Gross Conversion  | Yes |  
+| Net Conversion    | No | 
+
+We see that from both results, the new trial process performed as expected. From the size effect test, we see that the gross conversion dropped by 2%, and the net conversion is not changed. We also see that the sign test results confirmed the results. 
+
+#Recommendation
+
+Considering the test results, the recommendation is to **NOT** implementing the new trial process. Yes, the new trial process has been useful in decreasing the gross conversion rate by about 2 %, but that is not our main goal. At the end of the day, we would like to see an increase in the net conversion rate. However, the results for the net conversion rate is not significant, and additionally, the size effect test indicate that the impact might be negative to the net conversion rate. 
+
+
+#Follow-Up Experiment
+Learning from my own experience as a Udacity student, the most important thing to increase the net retention rate is not by filtering out the students, but by creating engaging and interesting materials. Online learning is different to the inclass learning where the external motivation can be exercised by the teacher. In online learning, user experiences are the most important thing. Students usually not motivated because they can't see until the end of the course.
+
+I'd like to propose an experiment where we designed a gamification of the course. We include element of games where there is scores and reward for the course. By finishing up certain module **before** the trial period has ended, student can get discount or other rewards if they choose to go on for the full path. 
+
+For example, if student finish the "prerequisite module" before the trial's ended, they will be able to get 10% discount if they choose to enroll. If they finish both "prerequisite module" and the "overview module", they can register for the full time with 25% discount. 
+
+The reward doesn't have to be money. Getting personal motivation by Prof. Sebastian Thrun (read: personal email, not generic email) is also motivating. 
+
+The metrics and variable of this experiment would be the same as before. The unit of diversion would also be cookies., where the invariant metrics are number of cookies, click through probability, and the evaluation metrics would be net retention rate. 
+
+The hypothesis is that the gamification will motivate many people, and therefore increase the net retention rate. 
+
+
